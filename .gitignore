@@ -3,4 +3,4 @@ __pycache__/
 *.pyc
 .DS_Store
 Thumbs.db
-dashboard/email_preview.html
+docs/email_preview.html
