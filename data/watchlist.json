@@ -1,0 +1,62 @@
+{
+  "held": ["CEG", "ETN", "GEV", "OSS", "PWR", "SOFI", "VFV.TO", "XEQT.TO"],
+  "tier2": {
+    "description": "Active buy priority — not owned yet",
+    "tickers": [
+      {
+        "ticker": "BWXT",
+        "role": "Best Tier 2 fit, nuclear/defense",
+        "cap_pct": 15,
+        "score": 86,
+        "target_weight_pct": 9
+      },
+      {
+        "ticker": "MSFT",
+        "role": "Quality tech compounder",
+        "cap_pct": 15,
+        "score": 86,
+        "target_weight_pct": 8
+      },
+      {
+        "ticker": "PLTR",
+        "role": "Capped AI satellite",
+        "cap_pct": 5,
+        "score": 74,
+        "target_weight_pct": 5
+      }
+    ]
+  },
+  "tier3": {
+    "description": "Months 2-3 watch only",
+    "tickers": ["NVDA", "WMB", "CRWD", "KMI", "HWM", "FIX", "ISRG", "NBIS"]
+  },
+  "tier4": {
+    "description": "Speculative watch",
+    "tickers": ["RKLB", "LUNR", "ASTS", "CRCL", "PL", "BAM"]
+  },
+  "etfs": {
+    "description": "ETF layer",
+    "tickers": [
+      {
+        "ticker": "XEQT.TO",
+        "role": "Core diversification engine — grow to 40%",
+        "status": "held_active_buy"
+      },
+      {
+        "ticker": "VFV.TO",
+        "role": "S&P 500 legacy hold — no new money",
+        "status": "held_no_add"
+      },
+      {
+        "ticker": "XIU.TO",
+        "role": "Not needed — redundant with XEQT",
+        "status": "watch_only"
+      },
+      {
+        "ticker": "CHPS.TO",
+        "role": "Thematic semiconductor satellite — future past $15K",
+        "status": "watch_only"
+      }
+    ]
+  }
+}

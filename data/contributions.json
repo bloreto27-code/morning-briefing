@@ -1,0 +1,22 @@
+{
+  "tfsa_annual_limit": 7000,
+  "year": 2026,
+  "contributions_this_year_cad": 1298.12,
+  "remaining_room_cad": 5701.88,
+  "deposit_cadence": {
+    "biweekly_range": [750, 1000],
+    "weekly_extra": 100,
+    "notes": "Contributing $750-$1,000 bi-weekly + ~$100/week. Assume $7K/year through August 2027, likely more once working full-time."
+  },
+  "milestones": {
+    "next_target_cad": 5000,
+    "current_total_cad": 1298.12
+  },
+  "contribution_log": [
+    {
+      "date": "2026-06-24",
+      "amount_cad": 1298.12,
+      "notes": "Initial portfolio value at system setup"
+    }
+  ]
+}

@@ -1,0 +1,83 @@
+{
+  "last_updated": "2026-06-24",
+  "accounts": {
+    "questrade": {
+      "name": "Questrade TFSA",
+      "currency": "USD",
+      "cash": 1.22,
+      "cash_currency": "CAD"
+    },
+    "wealthsimple": {
+      "name": "Wealthsimple TFSA",
+      "currency": "CAD",
+      "cash": 0.08,
+      "cash_currency": "CAD"
+    }
+  },
+  "positions": [
+    {
+      "ticker": "CEG",
+      "shares": 1.3491,
+      "avg_cost": 248.28,
+      "currency": "USD",
+      "account": "questrade",
+      "status": "hold_no_add"
+    },
+    {
+      "ticker": "ETN",
+      "shares": 0.1714,
+      "avg_cost": 379.05,
+      "currency": "USD",
+      "account": "questrade",
+      "status": "hold_no_add"
+    },
+    {
+      "ticker": "GEV",
+      "shares": 0.0057,
+      "avg_cost": 866.3,
+      "currency": "USD",
+      "account": "questrade",
+      "status": "hold_no_add"
+    },
+    {
+      "ticker": "OSS",
+      "shares": 6.0,
+      "avg_cost": 15.78,
+      "currency": "USD",
+      "account": "questrade",
+      "status": "hold_no_add"
+    },
+    {
+      "ticker": "PWR",
+      "shares": 0.0772,
+      "avg_cost": 647.03,
+      "currency": "USD",
+      "account": "questrade",
+      "status": "hold_no_add"
+    },
+    {
+      "ticker": "SOFI",
+      "shares": 4.8391,
+      "avg_cost": 17.22,
+      "currency": "USD",
+      "account": "questrade",
+      "status": "hold_no_add"
+    },
+    {
+      "ticker": "VFV.TO",
+      "shares": 1.0801,
+      "avg_cost": 183.98,
+      "currency": "CAD",
+      "account": "wealthsimple",
+      "status": "hold_no_add"
+    },
+    {
+      "ticker": "XEQT.TO",
+      "shares": 2.8494,
+      "avg_cost": 45.42,
+      "currency": "CAD",
+      "account": "wealthsimple",
+      "status": "active_buy"
+    }
+  ]
+}

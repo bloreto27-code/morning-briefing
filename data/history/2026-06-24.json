@@ -1,0 +1,90 @@
+{
+  "date": "2026-06-24",
+  "timestamp": "2026-06-24T22:00:45.287205",
+  "fx_rate": 1.4237,
+  "total_portfolio_cad": 1286.08,
+  "total_gain_cad": 55.69,
+  "total_gain_pct": 4.53,
+  "cash_cad": 1.3,
+  "positions": {
+    "CEG": {
+      "price": 267.97,
+      "value_cad": 514.7,
+      "weight_pct": 40.02,
+      "gain_pct": 7.93,
+      "currency": "USD"
+    },
+    "ETN": {
+      "price": 404.59,
+      "value_cad": 98.73,
+      "weight_pct": 7.68,
+      "gain_pct": 6.74,
+      "currency": "USD"
+    },
+    "GEV": {
+      "price": 1057.65,
+      "value_cad": 8.58,
+      "weight_pct": 0.67,
+      "gain_pct": 22.06,
+      "currency": "USD"
+    },
+    "OSS": {
+      "price": 16.11,
+      "value_cad": 137.61,
+      "weight_pct": 10.7,
+      "gain_pct": 2.09,
+      "currency": "USD"
+    },
+    "PWR": {
+      "price": 701.88,
+      "value_cad": 77.15,
+      "weight_pct": 6.0,
+      "gain_pct": 8.49,
+      "currency": "USD"
+    },
+    "SOFI": {
+      "price": 17.31,
+      "value_cad": 119.25,
+      "weight_pct": 9.27,
+      "gain_pct": 0.52,
+      "currency": "USD"
+    },
+    "VFV.TO": {
+      "price": 185.98,
+      "value_cad": 200.88,
+      "weight_pct": 15.62,
+      "gain_pct": 1.09,
+      "currency": "CAD"
+    },
+    "XEQT.TO": {
+      "price": 44.88,
+      "value_cad": 127.88,
+      "weight_pct": 9.94,
+      "gain_pct": -1.19,
+      "currency": "CAD"
+    }
+  },
+  "zone_statuses": {
+    "XEQT.TO": "BUY",
+    "BWXT": "BUY",
+    "MSFT": "BUY",
+    "PLTR": "BUY",
+    "SOFI": "BUY"
+  },
+  "cap_statuses": {
+    "CEG": "BREACH",
+    "VFV.TO": "NO CAP",
+    "OSS": "BREACH",
+    "XEQT.TO": "NO CAP",
+    "SOFI": "NEAR CAP",
+    "ETN": "OK",
+    "PWR": "OK",
+    "GEV": "OK"
+  },
+  "breaches": [
+    "CEG",
+    "OSS"
+  ],
+  "theme_exposure_pct": 90.0,
+  "core_pct": 9.9
+}

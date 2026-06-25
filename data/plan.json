@@ -1,0 +1,224 @@
+{
+  "target_portfolio_cad": 5000,
+  "target_allocation": {
+    "xeqt_core": {
+      "label": "XEQT.TO Core",
+      "target_pct": 40,
+      "target_cad": 2000,
+      "notes": "Diversification engine. Fund FIRST every deposit until target."
+    },
+    "tier2": {
+      "label": "Tier 2 (BWXT, MSFT, PLTR)",
+      "target_pct": 22,
+      "target_cad": 1100,
+      "notes": "Active build priority. BWXT ~9%, MSFT ~8%, PLTR ~5% (hard cap)."
+    },
+    "conviction": {
+      "label": "Current Conviction Holdings",
+      "target_pct": 28,
+      "target_cad": 1400,
+      "notes": "CEG, ETN, GEV, OSS, PWR, SOFI — held, not added to. Shrink by dilution."
+    },
+    "cash": {
+      "label": "Cash",
+      "target_pct": 10,
+      "target_cad": 500,
+      "notes": "Dry powder for red days / limit orders."
+    }
+  },
+  "position_caps": {
+    "default_max_pct": 15,
+    "overrides": {
+      "PLTR": 5,
+      "OSS": 7,
+      "SOFI": 10
+    },
+    "cash_target_pct_range": [5, 10],
+    "high_beta_crypto_max_pct": 50,
+    "cap_rules": "No single satellite position exceeds 15% of total portfolio (unconditional below $15K). PLTR capped at 5% — no exceptions."
+  },
+  "buy_zones": [
+    {
+      "ticker": "XEQT.TO",
+      "role": "Core ETF (held)",
+      "ref_price": "live",
+      "starter": "buy every deposit",
+      "preferred": null,
+      "aggressive": null,
+      "no_chase": null,
+      "cap_pct": null,
+      "score": 92,
+      "thesis_break": "Risk tolerance / time horizon changes"
+    },
+    {
+      "ticker": "VFV.TO",
+      "role": "U.S. ETF (held)",
+      "ref_price": "live",
+      "starter": "hold only, no new money",
+      "preferred": null,
+      "aggressive": null,
+      "no_chase": null,
+      "cap_pct": null,
+      "score": null,
+      "thesis_break": "Hold; overlaps tech concentration"
+    },
+    {
+      "ticker": "BWXT",
+      "role": "Tier 2 priority",
+      "ref_price": 209.89,
+      "starter": [205, 210],
+      "preferred": [180, 195],
+      "aggressive": 175,
+      "no_chase": 220,
+      "cap_pct": 15,
+      "score": 86,
+      "thesis_break": "Backlog weakens, guidance cut, contract risk rises, valuation overheats"
+    },
+    {
+      "ticker": "MSFT",
+      "role": "Tier 2 priority",
+      "ref_price": 373.94,
+      "starter": [365, 375],
+      "preferred": [335, 355],
+      "aggressive": 325,
+      "no_chase": 400,
+      "cap_pct": 15,
+      "score": 86,
+      "thesis_break": "Azure slows sharply, AI capex hurts margins with no payoff"
+    },
+    {
+      "ticker": "PLTR",
+      "role": "Tier 2 capped",
+      "ref_price": 116.70,
+      "starter": [105, 115],
+      "preferred": [90, 100],
+      "aggressive": 85,
+      "no_chase": 120,
+      "cap_pct": 5,
+      "score": 74,
+      "thesis_break": "Growth slows, valuation breaks, govt demand weakens, position exceeds 5%",
+      "monitoring_flags": ["European contract losses (Switzerland legal loss; France replacing with ChapsVision)"]
+    },
+    {
+      "ticker": "SOFI",
+      "role": "Held conviction",
+      "ref_price": 17.29,
+      "starter": [16.50, 17.50],
+      "preferred": [14.50, 16.00],
+      "aggressive": 14.00,
+      "no_chase": null,
+      "cap_pct": 10,
+      "score": 76,
+      "thesis_break": "Credit quality worsens, growth slows, funding costs rise"
+    },
+    {
+      "ticker": "CEG",
+      "role": "Held conviction",
+      "ref_price": 270.26,
+      "starter": "hold, no add",
+      "preferred": 230,
+      "aggressive": 203,
+      "no_chase": null,
+      "cap_pct": 15,
+      "score": 83,
+      "thesis_break": "Power thesis weakens, nuclear regulation worsens, guidance deteriorates"
+    },
+    {
+      "ticker": "ETN",
+      "role": "Held conviction",
+      "ref_price": 405.28,
+      "starter": "hold, no add",
+      "preferred": 344,
+      "aggressive": 304,
+      "no_chase": null,
+      "cap_pct": 15,
+      "score": 78,
+      "thesis_break": "Backlog weakens, margins compress, data center demand slows"
+    },
+    {
+      "ticker": "GEV",
+      "role": "Held conviction",
+      "ref_price": 1034.98,
+      "starter": "hold, no add",
+      "preferred": 880,
+      "aggressive": 776,
+      "no_chase": null,
+      "cap_pct": 15,
+      "score": 80,
+      "thesis_break": "AI power buildout slows, guidance weakens, execution problems"
+    },
+    {
+      "ticker": "PWR",
+      "role": "Held conviction",
+      "ref_price": 702.29,
+      "starter": "hold, no add",
+      "preferred": 597,
+      "aggressive": 527,
+      "no_chase": null,
+      "cap_pct": 15,
+      "score": 76,
+      "thesis_break": "Backlog weakens, utility spending slows, margins deteriorate"
+    },
+    {
+      "ticker": "OSS",
+      "role": "Held conviction",
+      "ref_price": 17.02,
+      "starter": "hold, no add",
+      "preferred": 14.50,
+      "aggressive": 12.75,
+      "no_chase": null,
+      "cap_pct": 7,
+      "score": 65,
+      "thesis_break": "Growth stalls, dilution rises, thesis becomes unclear"
+    }
+  ],
+  "focus_buys_priority": [
+    {"rank": 1, "ticker": "XEQT.TO", "reason": "Core / diversification engine — fund first every deposit until ~$2,000 / 40%"},
+    {"rank": 2, "ticker": "BWXT", "reason": "First Tier 2 buy, price-permitting"},
+    {"rank": 3, "ticker": "MSFT", "reason": "Second Tier 2"},
+    {"rank": 4, "ticker": "PLTR", "reason": "Capped satellite, only when 5% cap allows a real buy"},
+    {"rank": 5, "ticker": "SOFI", "reason": "Only after Tier 2 priority met"}
+  ],
+  "deposit_allocation": {
+    "100": {"XEQT.TO": 100},
+    "250": {"XEQT.TO": 120, "BWXT_or_next": 130},
+    "500": {"XEQT.TO": 220, "BWXT": 150, "MSFT": 130},
+    "1000": {"XEQT.TO": 400, "BWXT": 250, "MSFT": 200, "PLTR_if_cap_allows": 100, "cash": 50}
+  },
+  "deployment_rules": [
+    "XEQT.TO funded first toward ~40% / ~$2,000",
+    "Tier 2 next, price-permitting",
+    "Skip any Tier 2 name above its no-chase zone; route to next eligible name or cash",
+    "No new money into current conviction holdings during build",
+    "No new money into VFV.TO"
+  ],
+  "scorecard_weights": {
+    "economic_need": 15,
+    "bottleneck_exposure": 20,
+    "business_quality": 20,
+    "valuation_discipline": 15,
+    "portfolio_fit": 15,
+    "risk_control": 10,
+    "source_confidence": 5
+  },
+  "scorecard_thresholds": {
+    "strong_buy": 90,
+    "approved": 80,
+    "watchlist_starter": 70,
+    "do_not_buy": 69
+  },
+  "attractive_price_test": [
+    "Materially cheaper (down 15-25% from recent high or below pre-written buy zone)",
+    "Thesis intact",
+    "Sizing safe (under 15% cap; PLTR under 5%)",
+    "Core (XEQT) still funded first"
+  ],
+  "execution_rules": [
+    "Limit orders only",
+    "Never buy at open (wait 9:45-10:15 AM ET)",
+    "Cancel unfilled day orders by 3:30 PM",
+    "Never chase up",
+    "One stock at a time, staggered",
+    "Rebalance via new deposits, not selling"
+  ]
+}

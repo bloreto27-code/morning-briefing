@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Morning Briefing</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --card: #161b22;
+    --border: #30363d;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --green: #3fb950;
+    --red: #f85149;
+    --yellow: #d29922;
+    --blue: #58a6ff;
+    --purple: #bc8cff;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.5;
+    padding: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  h1 { font-size: 1.5rem; margin-bottom: 4px; }
+  h2 { font-size: 1.1rem; margin-bottom: 12px; color: var(--blue); border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+  .subtitle { color: var(--muted); font-size: 0.85rem; margin-bottom: 20px; }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 768px) { .grid-2 { grid-template-columns: 1fr; } }
+  .verdict-line { margin-bottom: 6px; font-size: 0.95rem; }
+  .pos, .up { color: var(--green); }
+  .neg, .down { color: var(--red); }
+  .warn { color: var(--yellow); }
+  .hold { color: var(--muted); }
+  .breach { color: var(--red); font-weight: bold; }
+  .buy-zone { color: var(--green); font-weight: bold; }
+  .no-chase { color: var(--red); }
+  table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+  th { text-align: left; color: var(--muted); font-weight: 600; padding: 6px 8px; border-bottom: 1px solid var(--border); }
+  td { padding: 6px 8px; border-bottom: 1px solid var(--border); }
+  tr:last-child td { border-bottom: none; }
+  .r { text-align: right; }
+  .progress-row { margin-bottom: 10px; }
+  .progress-label { display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 3px; }
+  .progress-bar-bg { background: var(--border); border-radius: 4px; height: 20px; position: relative; overflow: hidden; }
+  .progress-bar-fill { height: 100%; border-radius: 4px; transition: width 0.5s; }
+  .progress-bar-target { position: absolute; top: 0; height: 100%; width: 2px; background: var(--yellow); }
+  .progress-bar-text { position: absolute; top: 0; left: 8px; line-height: 20px; font-size: 0.75rem; font-weight: 600; }
+  .stat { text-align: center; }
+  .stat-value { font-size: 1.6rem; font-weight: 700; }
+  .stat-label { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; }
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+  .badge-buy { background: rgba(63,185,80,0.15); color: var(--green); }
+  .badge-hold { background: rgba(139,148,158,0.15); color: var(--muted); }
+  .badge-breach { background: rgba(248,81,73,0.15); color: var(--red); }
+  .badge-watch { background: rgba(210,153,34,0.15); color: var(--yellow); }
+  .badge-nochase { background: rgba(248,81,73,0.15); color: var(--red); }
+  .badge-near { background: rgba(210,153,34,0.15); color: var(--yellow); }
+  .badge-ok { background: rgba(63,185,80,0.15); color: var(--green); }
+  .news-item { padding: 4px 0; border-bottom: 1px solid var(--border); font-size: 0.78rem; line-height: 1.4; }
+  .news-item:last-child { border-bottom: none; }
+  .news-ticker { font-weight: 600; color: var(--blue); font-size: 0.75rem; }
+  .news-pub { font-size: 0.68rem; color: var(--muted); }
+  .collapsible-toggle { cursor: pointer; user-select: none; display: flex; justify-content: space-between; align-items: center; }
+  .collapsible-toggle::after { content: '\25B2'; font-size: 0.7rem; color: var(--muted); transition: transform 0.2s; }
+  .collapsible-toggle.collapsed::after { transform: rotate(180deg); }
+  .collapsible-body { overflow: hidden; transition: max-height 0.3s ease; }
+  .collapsible-body.hidden { max-height: 0 !important; }
+  .warning-box { background: rgba(210,153,34,0.1); border: 1px solid var(--yellow); border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; font-size: 0.85rem; color: var(--yellow); }
+  .thesis-flag { background: rgba(248,81,73,0.1); border: 1px solid var(--red); border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; font-size: 0.85rem; }
+  .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; margin-bottom: 16px; }
+  .tk { color: var(--blue); cursor: pointer; font-weight: 600; border-bottom: 1px dotted var(--border); }
+  .tk:hover { color: #79c0ff; border-bottom-color: var(--blue); }
+  .panel-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 100; }
+  .panel-overlay.open { display: block; }
+  .panel {
+    position: fixed; top: 0; right: -420px; width: 400px; max-width: 90vw; height: 100vh;
+    background: var(--card); border-left: 1px solid var(--border); z-index: 101;
+    overflow-y: auto; padding: 20px; transition: right 0.25s ease;
+  }
+  .panel.open { right: 0; }
+  .panel-close { position: absolute; top: 12px; right: 16px; background: none; border: none; color: var(--muted); font-size: 1.4rem; cursor: pointer; }
+  .panel-close:hover { color: var(--text); }
+  .panel h2 { font-size: 1.3rem; margin-bottom: 4px; border: none; padding: 0; }
+  .panel-role { color: var(--muted); font-size: 0.85rem; margin-bottom: 16px; }
+  .panel-section { margin-bottom: 16px; }
+  .panel-section h3 { font-size: 0.85rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+  .panel-row { display: flex; justify-content: space-between; padding: 4px 0; font-size: 0.85rem; border-bottom: 1px solid var(--border); }
+  .panel-row:last-child { border-bottom: none; }
+  .panel-row-label { color: var(--muted); }
+  .panel-thesis-break { background: rgba(248,81,73,0.1); border: 1px solid var(--red); border-radius: 6px; padding: 10px; font-size: 0.82rem; margin-top: 6px; }
+  .panel-news-item { padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 0.8rem; }
+  .panel-news-item:last-child { border-bottom: none; }
+</style>
+</head>
+<body>
+
+<h1>Morning Briefing</h1>
+<div class="subtitle" id="timestamp">Loading...</div>
+
+<div id="app">
+  <div class="card" style="text-align:center; padding:40px;">Loading briefing data...</div>
+</div>
+
+<div class="panel-overlay" id="panelOverlay" onclick="closePanel()"></div>
+<div class="panel" id="panel">
+  <button class="panel-close" onclick="closePanel()">&times;</button>
+  <div id="panelContent"></div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const sign = v => v >= 0 ? '+' : '';
+const fmt = (v, d=2) => v != null ? v.toFixed(d) : '--';
+const fmtMoney = v => v != null ? '$' + v.toLocaleString('en-CA', {minimumFractionDigits:2, maximumFractionDigits:2}) : '--';
+const cls = v => v >= 0 ? 'pos' : 'neg';
+let _data = null;
+
+function badge(status) {
+  const map = {
+    'BUY': 'badge-buy', 'HOLD': 'badge-hold', 'BREACH': 'badge-breach',
+    'WATCH': 'badge-watch', 'NO-CHASE': 'badge-nochase', 'WAIT': 'badge-watch',
+    'NEAR CAP': 'badge-near', 'OK': 'badge-ok', 'NO CAP': 'badge-hold',
+  };
+  return `<span class="badge ${map[status] || 'badge-hold'}">${status}</span>`;
+}
+
+function tk(ticker) {
+  return `<span class="tk" onclick="openPanel('${ticker}')">${ticker}</span>`;
+}
+
+function closePanel() {
+  $('panel').classList.remove('open');
+  $('panelOverlay').classList.remove('open');
+}
+
+function openPanel(ticker) {
+  if (!_data || !_data.ticker_details) return;
+  const d = _data.ticker_details[ticker];
+  if (!d) { closePanel(); return; }
+
+  let h = `<h2>${d.ticker}</h2>`;
+  h += `<div class="panel-role">${d.role || 'Watchlist ticker'}</div>`;
+
+  // Price header
+  if (d.price != null) {
+    const ccy = d.currency || 'USD';
+    const dc = d.day_pct != null ? `<span class="${cls(d.day_pct)}">${sign(d.day_pct)}${fmt(d.day_pct,1)}%</span>` : '';
+    h += `<div style="font-size:1.3rem;font-weight:700;margin-bottom:16px">$${fmt(d.price)} ${ccy} ${dc}</div>`;
+  }
+
+  // Position (if held)
+  if (d.held) {
+    h += `<div class="panel-section"><h3>My Position</h3>`;
+    h += `<div class="panel-row"><span class="panel-row-label">Shares</span><span>${fmt(d.shares, 4)}</span></div>`;
+    h += `<div class="panel-row"><span class="panel-row-label">Value (CAD)</span><span>${fmtMoney(d.value_cad)}</span></div>`;
+    const gc = d.gain_cad != null ? cls(d.gain_cad) : '';
+    h += `<div class="panel-row"><span class="panel-row-label">Gain</span><span class="${gc}">${d.gain_cad != null ? sign(d.gain_cad)+fmtMoney(Math.abs(d.gain_cad))+' ('+sign(d.gain_pct)+fmt(d.gain_pct,1)+'%)' : '--'}</span></div>`;
+    h += `<div class="panel-row"><span class="panel-row-label">Weight</span><span>${d.weight_pct != null ? fmt(d.weight_pct,1)+'%' : '--'}</span></div>`;
+    h += `<div class="panel-row"><span class="panel-row-label">Status</span><span>${(d.status||'').replace(/_/g,' ')}</span></div>`;
+    h += `</div>`;
+  }
+
+  // Buy Zone Status
+  h += `<div class="panel-section"><h3>Buy Zone</h3>`;
+  if (d.zone_status) {
+    h += `<div style="margin-bottom:8px">${badge(d.zone_status)} <span style="font-size:0.82rem;color:var(--muted)">${d.zone_reason || ''}</span></div>`;
+  }
+  h += `<div class="panel-row"><span class="panel-row-label">Starter</span><span>${d.starter || '--'}</span></div>`;
+  h += `<div class="panel-row"><span class="panel-row-label">Preferred</span><span>${d.preferred || '--'}</span></div>`;
+  h += `<div class="panel-row"><span class="panel-row-label">Aggressive</span><span>${d.aggressive || '--'}</span></div>`;
+  h += `<div class="panel-row"><span class="panel-row-label">No-Chase</span><span>${d.no_chase || '--'}</span></div>`;
+  h += `</div>`;
+
+  // Scorecard & Cap
+  h += `<div class="panel-section"><h3>Scorecard & Cap</h3>`;
+  h += `<div class="panel-row"><span class="panel-row-label">Score</span><span>${d.score != null ? d.score + '/100' : '--'}</span></div>`;
+  h += `<div class="panel-row"><span class="panel-row-label">Cap</span><span>${d.cap_pct != null ? d.cap_pct + '%' : '--'}</span></div>`;
+  if (d.cap_status) h += `<div class="panel-row"><span class="panel-row-label">Cap Status</span><span>${badge(d.cap_status)}</span></div>`;
+  h += `<div class="panel-row"><span class="panel-row-label">Room (CAD)</span><span>${d.room_cad != null ? fmtMoney(d.room_cad) : '--'}</span></div>`;
+  h += `</div>`;
+
+  // Thesis-Break Triggers
+  if (d.thesis_break) {
+    h += `<div class="panel-section"><h3>Thesis-Break Triggers</h3>`;
+    h += `<div class="panel-thesis-break">${d.thesis_break}</div>`;
+    if (d.monitoring_flags && d.monitoring_flags.length) {
+      d.monitoring_flags.forEach(mf => {
+        h += `<div class="panel-thesis-break" style="margin-top:6px;border-color:var(--yellow);background:rgba(210,153,34,0.1)">Monitoring: ${mf}</div>`;
+      });
+    }
+    if (d.thesis_flags && d.thesis_flags.length) {
+      h += `<div style="margin-top:8px;font-size:0.82rem;color:var(--red);font-weight:600">Active flags in today's news:</div>`;
+      d.thesis_flags.forEach(tf => {
+        h += `<div style="font-size:0.8rem;margin-top:4px">"${tf.title}" <span style="color:var(--muted)">— matched: ${tf.matched_keyword}</span></div>`;
+      });
+    }
+    h += `</div>`;
+  }
+
+  // News for this ticker
+  h += `<div class="panel-section"><h3>Recent News</h3>`;
+  if (d.news && d.news.length) {
+    d.news.forEach(n => {
+      const title = n.link
+        ? `<a href="${n.link}" target="_blank" rel="noopener" style="color:var(--text);text-decoration:none;border-bottom:1px dotted var(--muted)">${n.title}</a>`
+        : n.title;
+      h += `<div class="panel-news-item">${title}<div style="font-size:0.7rem;color:var(--muted)">${n.publisher} -- ${n.published}</div></div>`;
+    });
+  } else {
+    h += `<div style="color:var(--muted);font-size:0.82rem">No recent news for this ticker.</div>`;
+  }
+  h += `</div>`;
+
+  $('panelContent').innerHTML = h;
+  $('panel').classList.add('open');
+  $('panelOverlay').classList.add('open');
+}
+
+async function load() {
+  try {
+    const r = await fetch('data.json?' + Date.now());
+    const d = await r.json();
+    render(d);
+  } catch(e) {
+    $('app').innerHTML = `<div class="card" style="text-align:center">
+      <p>Could not load data.json</p><p style="color:var(--muted)">${e.message}</p></div>`;
+  }
+}
+
+function render(d) {
+  _data = d;
+  $('timestamp').textContent = `Updated: ${d.generated_at}  |  USD/CAD: ${d.portfolio.fx_rate}`;
+
+  let html = '';
+
+  // Verdict
+  html += `<div class="card"><h2>Today's Verdict</h2>`;
+  d.verdict.forEach(v => html += `<div class="verdict-line">${v}</div>`);
+  html += `</div>`;
+
+  // Stats row
+  const p = d.portfolio;
+  html += `<div class="stats-row">
+    <div class="card stat"><div class="stat-value">${fmtMoney(p.total_cad)}</div><div class="stat-label">Portfolio CAD</div></div>
+    <div class="card stat"><div class="stat-value ${cls(p.total_gain_cad)}">${sign(p.total_gain_cad)}${fmtMoney(Math.abs(p.total_gain_cad))}</div><div class="stat-label">Total Gain</div></div>
+    <div class="card stat"><div class="stat-value ${cls(p.total_gain_pct)}">${sign(p.total_gain_pct)}${fmt(p.total_gain_pct,1)}%</div><div class="stat-label">Return</div></div>
+    <div class="card stat"><div class="stat-value">${fmtMoney(d.progress.gap_to_target_cad)}</div><div class="stat-label">Gap to $5K</div></div>
+    <div class="card stat"><div class="stat-value">${fmtMoney(p.cash_cad)}</div><div class="stat-label">Cash</div></div>
+  </div>`;
+
+  // Warnings
+  const allWarnings = [...(d.progress.warnings || []), ...(d.caps.warnings || [])];
+  if (allWarnings.length) {
+    allWarnings.forEach(w => html += `<div class="warning-box">${w}</div>`);
+  }
+
+  // Grid: Progress + What Changed
+  html += `<div class="grid-2">`;
+
+  // Progress
+  html += `<div class="card"><h2>Progress to $5K Target</h2>`;
+  d.progress.buckets.forEach(b => {
+    const pct = Math.min(b.current_pct, 100);
+    const targetPos = Math.min(b.target_pct, 100);
+    const color = b.current_pct < b.target_pct - 10 ? 'var(--red)' : b.current_pct < b.target_pct ? 'var(--yellow)' : 'var(--green)';
+    html += `<div class="progress-row">
+      <div class="progress-label"><span>${b.label}</span><span>${fmt(b.current_pct,1)}% / ${b.target_pct}%</span></div>
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill" style="width:${pct}%; background:${color}"></div>
+        <div class="progress-bar-target" style="left:${targetPos}%"></div>
+        <div class="progress-bar-text">${fmtMoney(b.current_cad)} (gap: ${fmtMoney(b.gap_cad)})</div>
+      </div></div>`;
+  });
+  html += `<div style="font-size:0.8rem;color:var(--muted);margin-top:8px">Theme exposure: ${d.progress.theme_exposure_pct}% | Diversified: ${d.progress.diversified_pct}%</div>`;
+  html += `</div>`;
+
+  // What changed
+  html += `<div class="card"><h2>What Changed</h2>`;
+  if (d.what_changed.length) {
+    d.what_changed.forEach(c => html += `<div style="margin-bottom:6px;font-size:0.85rem">${c}</div>`);
+  } else {
+    html += `<div style="color:var(--muted)">No changes detected.</div>`;
+  }
+  html += `</div></div>`;
+
+  // Portfolio table
+  html += `<div class="card"><h2>Portfolio Snapshot</h2><table>
+    <tr><th>Ticker</th><th class="r">Shares</th><th class="r">Price</th><th class="r">Day</th>
+    <th class="r">Value CAD</th><th class="r">Gain</th><th class="r">G%</th><th class="r">Weight</th></tr>`;
+  p.positions.sort((a,b) => b.value_cad - a.value_cad).forEach(pos => {
+    const c = pos.currency === 'CAD' ? 'C' : 'U';
+    html += `<tr>
+      <td>${tk(pos.ticker)}</td><td class="r">${fmt(pos.shares,4)}</td>
+      <td class="r">${fmt(pos.price)}${c}</td>
+      <td class="r ${cls(pos.day_pct)}">${sign(pos.day_pct)}${fmt(pos.day_pct,1)}%</td>
+      <td class="r">${fmtMoney(pos.value_cad)}</td>
+      <td class="r ${cls(pos.gain_cad)}">${sign(pos.gain_cad)}${fmtMoney(Math.abs(pos.gain_cad))}</td>
+      <td class="r ${cls(pos.gain_pct)}">${sign(pos.gain_pct)}${fmt(pos.gain_pct,1)}%</td>
+      <td class="r">${fmt(pos.weight_pct,1)}%</td></tr>`;
+  });
+  html += `<tr style="font-weight:700"><td>Cash</td><td></td><td></td><td></td>
+    <td class="r">${fmtMoney(p.cash_cad)}</td><td></td><td></td><td></td></tr>`;
+  html += `<tr style="font-weight:700;border-top:2px solid var(--border)"><td>TOTAL</td><td></td><td></td><td></td>
+    <td class="r">${fmtMoney(p.total_cad)}</td>
+    <td class="r ${cls(p.total_gain_cad)}">${sign(p.total_gain_cad)}${fmtMoney(Math.abs(p.total_gain_cad))}</td>
+    <td class="r ${cls(p.total_gain_pct)}">${sign(p.total_gain_pct)}${fmt(p.total_gain_pct,1)}%</td><td></td></tr>`;
+  html += `</table></div>`;
+
+  // Grid: Cap Status + Focus Buys
+  html += `<div class="grid-2">`;
+
+  // Cap Status
+  html += `<div class="card"><h2>Cap Status</h2><table>
+    <tr><th>Ticker</th><th class="r">Weight</th><th class="r">Cap</th><th class="r">Room</th><th>Status</th></tr>`;
+  d.caps.positions.forEach(c => {
+    html += `<tr><td>${tk(c.ticker)}</td><td class="r">${fmt(c.weight_pct,1)}%</td>
+      <td class="r">${c.cap_pct ? c.cap_pct+'%' : '--'}</td>
+      <td class="r">${c.room_cad !== null ? fmtMoney(c.room_cad) : '--'}</td>
+      <td>${badge(c.status)}</td></tr>`;
+  });
+  html += `</table></div>`;
+
+  // Focus Buys
+  html += `<div class="card"><h2>Focus Buys</h2><table>
+    <tr><th>#</th><th>Ticker</th><th class="r">Price</th><th class="r">Day</th><th>Zone</th><th class="r">Score</th><th class="r">Room</th></tr>`;
+  d.focus_buys.forEach(fb => {
+    const c = fb.currency === 'CAD' ? 'C' : 'U';
+    html += `<tr><td>${fb.rank}</td><td>${tk(fb.ticker)}</td>
+      <td class="r">${fmt(fb.price)}${c}</td>
+      <td class="r ${cls(fb.day_pct)}">${sign(fb.day_pct)}${fmt(fb.day_pct,1)}%</td>
+      <td>${badge(fb.zone_status)}</td>
+      <td class="r">${fb.score || '--'}</td>
+      <td class="r">${fb.room_cad !== null ? fmtMoney(fb.room_cad) : '--'}</td></tr>`;
+  });
+  html += `</table></div></div>`;
+
+  // Thesis flags
+  if (d.thesis_flags && d.thesis_flags.length) {
+    html += `<div class="card"><h2>Thesis-Break Watch</h2>`;
+    d.thesis_flags.forEach(tf => {
+      html += `<div class="thesis-flag">${tk(tf.ticker)}: "${tf.title}"<br>
+        <span style="color:var(--muted)">Matched: ${tf.matched_keyword}</span></div>`;
+    });
+    html += `</div>`;
+  }
+
+  // News (collapsible)
+  html += `<div class="card"><h2 class="collapsible-toggle" onclick="toggleCollapse(this)">News & Catalysts (7 days)</h2>`;
+  html += `<div class="collapsible-body">`;
+  if (d.news.length) {
+    d.news.slice(0,25).forEach(n => {
+      const title = n.link
+        ? `<a href="${n.link}" target="_blank" rel="noopener" style="color:var(--text);text-decoration:none;border-bottom:1px dotted var(--muted)">${n.title}</a>`
+        : n.title;
+      html += `<div class="news-item"><span class="news-ticker tk" onclick="openPanel('${n.ticker}')">${n.ticker}</span> ${title}
+        <div class="news-pub">${n.publisher} -- ${n.published}</div></div>`;
+    });
+  } else {
+    html += `<div style="color:var(--muted)">No recent news.</div>`;
+  }
+  html += `</div></div>`;
+
+  // Full Price Board
+  html += `<div class="card"><h2>Full Price Board</h2><table>
+    <tr><th>Ticker</th><th class="r">Price</th><th class="r">Change</th><th class="r">%</th><th class="r">Ccy</th></tr>`;
+  d.price_board.forEach(pb => {
+    html += `<tr><td>${tk(pb.ticker)}</td><td class="r">${fmt(pb.price)}</td>
+      <td class="r ${cls(pb.change)}">${sign(pb.change)}${fmt(pb.change)}</td>
+      <td class="r ${cls(pb.pct_change)}">${sign(pb.pct_change)}${fmt(pb.pct_change,1)}%</td>
+      <td class="r">${pb.currency}</td></tr>`;
+  });
+  html += `</table></div>`;
+
+  // TFSA Room
+  const t = d.tfsa;
+  html += `<div class="card"><h2>TFSA Room</h2>
+    <div class="stats-row">
+      <div class="stat"><div class="stat-value">${fmtMoney(t.contributed)}</div><div class="stat-label">Contributed</div></div>
+      <div class="stat"><div class="stat-value">${fmtMoney(t.remaining_room)}</div><div class="stat-label">Room Left</div></div>
+      <div class="stat"><div class="stat-value">${fmtMoney(t.annual_limit)}</div><div class="stat-label">Annual Limit</div></div>
+      <div class="stat"><div class="stat-value">~${t.est_weeks_to_target}w</div><div class="stat-label">Est. Weeks to $5K</div></div>
+    </div>
+    <div class="progress-row">
+      <div class="progress-label"><span>Progress to $5K</span><span>${fmtMoney(t.current_total)} / ${fmtMoney(t.target)}</span></div>
+      <div class="progress-bar-bg" style="height:24px">
+        <div class="progress-bar-fill" style="width:${Math.min((t.current_total/t.target)*100,100)}%; background:var(--blue)"></div>
+        <div class="progress-bar-text" style="line-height:24px">${fmt((t.current_total/t.target)*100,1)}%</div>
+      </div>
+    </div></div>`;
+
+  $('app').innerHTML = html;
+}
+
+function toggleCollapse(el) {
+  el.classList.toggle('collapsed');
+  const body = el.nextElementSibling;
+  body.classList.toggle('hidden');
+}
+
+load();
+</script>
+</body>
+</html>
