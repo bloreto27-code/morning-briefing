@@ -26,6 +26,7 @@ def generate_dashboard_data(
         positions_list.append({
             "ticker": p["ticker"],
             "shares": p["shares"],
+            "avg_cost": p["avg_cost"],
             "price": p["live_price"],
             "currency": p["currency"],
             "value_cad": p["value_cad"],
@@ -139,6 +140,9 @@ def generate_dashboard_data(
             "day_pct": (price_info or {}).get("pct_change"),
             "held": pos_info is not None,
             "shares": (pos_info or {}).get("shares"),
+            "avg_cost": (pos_info or {}).get("avg_cost"),
+            "cost_cad": (pos_info or {}).get("cost_cad"),
+            "account": (pos_info or {}).get("account", ""),
             "value_cad": (pos_info or {}).get("value_cad"),
             "gain_cad": (pos_info or {}).get("gain_cad"),
             "gain_pct": (pos_info or {}).get("gain_pct"),

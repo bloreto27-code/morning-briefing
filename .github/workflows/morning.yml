@@ -6,15 +6,19 @@ on:
     # Adjust to 12:30 UTC during Eastern Standard Time (Nov-Mar)
     - cron: '30 11 * * 1-5'
   workflow_dispatch:
-    # Allows you to run it manually from the GitHub Actions tab
 
 permissions:
   contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
 
 jobs:
   briefing:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -30,12 +34,11 @@ jobs:
       - name: Run morning briefing
         env:
           SENDGRID_API_KEY: ${{ secrets.SENDGRID_API_KEY }}
-          BRIEFING_EMAIL_FROM: ${{ secrets.BRIEFING_EMAIL_FROM }}
-          BRIEFING_EMAIL_TO: ${{ secrets.BRIEFING_EMAIL_TO }}
           TWILIO_ACCOUNT_SID: ${{ secrets.TWILIO_ACCOUNT_SID }}
           TWILIO_AUTH_TOKEN: ${{ secrets.TWILIO_AUTH_TOKEN }}
           TWILIO_FROM_NUMBER: ${{ secrets.TWILIO_FROM_NUMBER }}
           TWILIO_TO_NUMBER: ${{ secrets.TWILIO_TO_NUMBER }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
           cd scripts
           python briefing.py
@@ -47,3 +50,27 @@ jobs:
           git add data/history/ docs/data.json
           git diff --cached --quiet || git commit -m "Daily briefing — $(date -u +'%Y-%m-%d')"
           git push
+
+  deploy-pages:
+    needs: briefing
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs/
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

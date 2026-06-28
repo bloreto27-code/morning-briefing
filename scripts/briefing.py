@@ -1,5 +1,6 @@
 import json
 import os
+import re
 import sys
 from datetime import datetime
 
@@ -17,6 +18,15 @@ from history import load_previous_snapshot, calc_what_changed, save_daily_snapsh
 from generate_dashboard import generate_dashboard_data, load_json
 
 
+def colorize_tickers(text, tickers):
+    """Wrap ticker symbols in gold bold HTML spans for email rendering."""
+    for ticker in sorted(tickers, key=len, reverse=True):
+        pattern = r'\b' + re.escape(ticker) + r'\b'
+        span = f'<span style="color:#F5A623;font-weight:bold;">{ticker}</span>'
+        text = re.sub(pattern, span, text)
+    return text
+
+
 def build_email_html(
     verdict_lines, progress, snapshot, cap_data, focus_buys,
     news_items, thesis_flags, changes, prices, tfsa_data
@@ -24,6 +34,13 @@ def build_email_html(
     """Generate a self-contained HTML email of the morning briefing."""
     date_str = datetime.now().strftime("%A, %B %d, %Y")
     fx = snapshot["fx_rate"]
+
+    # Build ticker list for gold colorization in plain-text sections
+    all_tickers = list({
+        pos["ticker"] for pos in snapshot.get("positions", []) if "error" not in pos
+    } | {
+        fb["ticker"] for fb in focus_buys if "error" not in fb
+    })
 
     s = f"""
     <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;
@@ -38,7 +55,7 @@ def build_email_html(
     s += '<div style="background:#161b22;border:1px solid #30363d;border-radius:8px;padding:14px;margin-bottom:14px;">'
     s += '<div style="color:#58a6ff;font-weight:600;margin-bottom:8px;font-size:0.9rem;">TODAY\'S VERDICT</div>'
     for line in verdict_lines:
-        s += f'<div style="margin-bottom:5px;font-size:0.88rem;">{line}</div>'
+        s += f'<div style="margin-bottom:5px;font-size:0.88rem;color:#e0e0e0;">{colorize_tickers(line, all_tickers)}</div>'
     s += '</div>'
 
     # Stats
@@ -77,14 +94,14 @@ def build_email_html(
         </div>"""
     if progress["warnings"]:
         for w in progress["warnings"]:
-            s += f'<div style="color:#d29922;font-size:0.8rem;margin-top:4px;">&#9888; {w}</div>'
+            s += f'<div style="color:#d29922;font-size:0.8rem;margin-top:4px;">&#9888; {colorize_tickers(w, all_tickers)}</div>'
     s += '</div>'
 
     # What Changed
     s += '<div style="background:#161b22;border:1px solid #30363d;border-radius:8px;padding:14px;margin-bottom:14px;">'
     s += '<div style="color:#58a6ff;font-weight:600;margin-bottom:8px;font-size:0.9rem;">WHAT CHANGED</div>'
     for c in changes:
-        s += f'<div style="font-size:0.82rem;margin-bottom:4px;">{c}</div>'
+        s += f'<div style="font-size:0.82rem;margin-bottom:4px;color:#e0e0e0;">{colorize_tickers(c, all_tickers)}</div>'
     s += '</div>'
 
     # Portfolio
@@ -100,7 +117,7 @@ def build_email_html(
         dc = "#3fb950" if pos["day_pct"] >= 0 else "#f85149"
         dsgn = "+" if pos["day_pct"] >= 0 else ""
         gsgn = "+" if pos["gain_pct"] >= 0 else ""
-        s += f'<tr style="border-bottom:1px solid #30363d;"><td style="padding:4px;font-weight:600;">{pos["ticker"]}</td><td style="text-align:right;padding:4px;">{pos["live_price"]:.2f}{ccy}</td><td style="text-align:right;padding:4px;color:{dc};">{dsgn}{pos["day_pct"]:.1f}%</td><td style="text-align:right;padding:4px;">${pos["value_cad"]:,.2f}</td><td style="text-align:right;padding:4px;color:{gc};">{gsgn}{pos["gain_pct"]:.1f}%</td><td style="text-align:right;padding:4px;">{pos.get("weight_pct",0):.1f}%</td></tr>'
+        s += f'<tr style="border-bottom:1px solid #30363d;"><td style="padding:4px;font-weight:700;color:#F5A623;">{pos["ticker"]}</td><td style="text-align:right;padding:4px;">{pos["live_price"]:.2f}{ccy}</td><td style="text-align:right;padding:4px;color:{dc};">{dsgn}{pos["day_pct"]:.1f}%</td><td style="text-align:right;padding:4px;">${pos["value_cad"]:,.2f}</td><td style="text-align:right;padding:4px;color:{gc};">{gsgn}{pos["gain_pct"]:.1f}%</td><td style="text-align:right;padding:4px;">{pos.get("weight_pct",0):.1f}%</td></tr>'
     s += '</table></div>'
 
     # Cap Status
@@ -108,14 +125,14 @@ def build_email_html(
     s += '<div style="color:#58a6ff;font-weight:600;margin-bottom:8px;font-size:0.9rem;">CAP STATUS</div>'
     if cap_data["breaches"]:
         for b in cap_data["breaches"]:
-            s += f'<div style="color:#f85149;font-size:0.82rem;margin-bottom:4px;">&#128308; {b["ticker"]}: {b["weight_pct"]:.1f}% vs {b["cap_pct"]}% cap &mdash; over by {b["over_by_pct"]}pp. Do not add.</div>'
+            s += f'<div style="color:#f85149;font-size:0.82rem;margin-bottom:4px;">&#128308; <strong style="color:#F5A623;">{b["ticker"]}</strong>: {b["weight_pct"]:.1f}% vs {b["cap_pct"]}% cap &mdash; over by {b["over_by_pct"]}pp. Do not add.</div>'
     s += '<table style="width:100%;border-collapse:collapse;font-size:0.78rem;">'
     s += '<tr style="color:#8b949e;"><th style="text-align:left;padding:4px;">Ticker</th><th style="text-align:right;padding:4px;">Wt%</th><th style="text-align:right;padding:4px;">Cap%</th><th style="text-align:right;padding:4px;">Room</th><th style="text-align:left;padding:4px;">Status</th></tr>'
     for c in cap_data["positions"]:
         status_color = "#f85149" if c["status"] == "BREACH" else "#d29922" if c["status"] == "NEAR CAP" else "#8b949e"
         room_str = f'${c["room_cad"]:,.2f}' if c["room_cad"] is not None else "--"
         cap_str = f'{c["cap_pct"]}%' if c["cap_pct"] else "--"
-        s += f'<tr style="border-bottom:1px solid #30363d;"><td style="padding:4px;">{c["ticker"]}</td><td style="text-align:right;padding:4px;">{c["weight_pct"]:.1f}%</td><td style="text-align:right;padding:4px;">{cap_str}</td><td style="text-align:right;padding:4px;">{room_str}</td><td style="padding:4px;color:{status_color};">{c["status"]}</td></tr>'
+        s += f'<tr style="border-bottom:1px solid #30363d;"><td style="padding:4px;font-weight:700;color:#F5A623;">{c["ticker"]}</td><td style="text-align:right;padding:4px;">{c["weight_pct"]:.1f}%</td><td style="text-align:right;padding:4px;">{cap_str}</td><td style="text-align:right;padding:4px;">{room_str}</td><td style="padding:4px;color:{status_color};">{c["status"]}</td></tr>'
     s += '</table></div>'
 
     # Focus Buys
@@ -131,7 +148,7 @@ def build_email_html(
         dsgn = "+" if fb["day_pct"] >= 0 else ""
         zone_color = "#3fb950" if fb["zone_status"] == "BUY" else "#d29922" if fb["zone_status"] == "WATCH" else "#8b949e"
         score_str = str(fb["score"]) if fb["score"] else "--"
-        s += f'<tr style="border-bottom:1px solid #30363d;"><td style="padding:4px;">{fb["rank"]}</td><td style="padding:4px;font-weight:600;">{fb["ticker"]}</td><td style="text-align:right;padding:4px;">{fb["live_price"]:.2f}{ccy}</td><td style="text-align:right;padding:4px;color:{dc};">{dsgn}{fb["day_pct"]:.1f}%</td><td style="padding:4px;color:{zone_color};">{fb["zone_status"]}</td><td style="text-align:right;padding:4px;">{score_str}</td></tr>'
+        s += f'<tr style="border-bottom:1px solid #30363d;"><td style="padding:4px;">{fb["rank"]}</td><td style="padding:4px;font-weight:700;color:#F5A623;">{fb["ticker"]}</td><td style="text-align:right;padding:4px;">{fb["live_price"]:.2f}{ccy}</td><td style="text-align:right;padding:4px;color:{dc};">{dsgn}{fb["day_pct"]:.1f}%</td><td style="padding:4px;color:{zone_color};">{fb["zone_status"]}</td><td style="text-align:right;padding:4px;">{score_str}</td></tr>'
     s += '</table></div>'
 
     # Thesis flags
@@ -140,7 +157,7 @@ def build_email_html(
         s += '<div style="color:#f85149;font-weight:600;margin-bottom:8px;font-size:0.9rem;">THESIS-BREAK WATCH</div>'
         for tf in thesis_flags:
             title = tf["title"][:80]
-            s += f'<div style="font-size:0.82rem;margin-bottom:6px;"><strong>{tf["ticker"]}:</strong> &ldquo;{title}&rdquo;<br><span style="color:#8b949e;">Matched: {tf["matched_keyword"]}</span></div>'
+            s += f'<div style="font-size:0.82rem;margin-bottom:6px;"><strong style="color:#F5A623;">{tf["ticker"]}:</strong> &ldquo;{title}&rdquo;<br><span style="color:#8b949e;">Matched: {tf["matched_keyword"]}</span></div>'
         s += '</div>'
 
     # News
@@ -150,7 +167,7 @@ def build_email_html(
         title = n["title"][:80]
         link = n.get("link", "")
         title_html = f'<a href="{link}" style="color:#e6edf3;text-decoration:none;border-bottom:1px dotted #8b949e;">{title}</a>' if link else title
-        s += f'<div style="font-size:0.75rem;padding:3px 0;border-bottom:1px solid #30363d;"><span style="color:#58a6ff;font-weight:600;">{n["ticker"]}</span> {title_html} <span style="color:#8b949e;font-size:0.68rem;">&mdash; {n["published"]}</span></div>'
+        s += f'<div style="font-size:0.75rem;padding:3px 0;border-bottom:1px solid #30363d;"><span style="color:#F5A623;font-weight:700;">{n["ticker"]}</span> {title_html} <span style="color:#8b949e;font-size:0.68rem;">&mdash; {n["published"]}</span></div>'
     s += '</div>'
 
     # TFSA
@@ -170,17 +187,18 @@ def build_email_html(
     return s
 
 
+SENDGRID_TO = "bloreto27@adrian.edu"
+SENDGRID_FROM = "bloreto27@adrian.edu"
+
+
 def send_email(html_body, subject=None):
     """Send the briefing email via SendGrid."""
     api_key = os.environ.get("SENDGRID_API_KEY")
-    to_email = os.environ.get("BRIEFING_EMAIL_TO")
-    from_email = os.environ.get("BRIEFING_EMAIL_FROM")
+    to_email = SENDGRID_TO
+    from_email = SENDGRID_FROM
 
     if not api_key:
         print("  SENDGRID_API_KEY not set — skipping email.")
-        return False
-    if not to_email or not from_email:
-        print("  BRIEFING_EMAIL_TO or BRIEFING_EMAIL_FROM not set — skipping email.")
         return False
 
     from sendgrid import SendGridAPIClient
