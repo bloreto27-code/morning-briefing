@@ -1,6 +1,10 @@
 import json
 import os
 from datetime import datetime
+from zoneinfo import ZoneInfo
+
+ET = ZoneInfo("America/Toronto")
+def now_et(): return datetime.now(ET)
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA_DIR = os.path.join(REPO_ROOT, "data")
@@ -160,8 +164,8 @@ def generate_dashboard_data(
     weeks_to_5k = int(gap_to_5k / weekly_deposit) if weekly_deposit > 0 else 0
 
     dashboard = {
-        "generated_at": datetime.now().strftime("%Y-%m-%d %I:%M %p ET"),
-        "date": datetime.now().strftime("%Y-%m-%d"),
+        "generated_at": now_et().strftime("%Y-%m-%d %I:%M %p ET"),
+        "date": now_et().strftime("%Y-%m-%d"),
         "verdict": verdict_lines,
         "portfolio": {
             "total_cad": snapshot["total_portfolio_cad"],

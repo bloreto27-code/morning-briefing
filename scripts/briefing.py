@@ -3,6 +3,10 @@ import os
 import re
 import sys
 from datetime import datetime
+from zoneinfo import ZoneInfo
+
+ET = ZoneInfo("America/Toronto")
+def now_et(): return datetime.now(ET)
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA_DIR = os.path.join(REPO_ROOT, "data")
@@ -32,7 +36,7 @@ def build_email_html(
     news_items, thesis_flags, changes, prices, tfsa_data
 ):
     """Generate a self-contained HTML email of the morning briefing."""
-    date_str = datetime.now().strftime("%A, %B %d, %Y")
+    date_str = now_et().strftime("%A, %B %d, %Y")
     fx = snapshot["fx_rate"]
 
     # Build ticker list for gold colorization in plain-text sections
@@ -205,7 +209,7 @@ def send_email(html_body, subject=None):
     from sendgrid.helpers.mail import Mail
 
     if not subject:
-        subject = f"Morning Briefing — {datetime.now().strftime('%B %d, %Y')}"
+        subject = f"Morning Briefing — {now_et().strftime('%B %d, %Y')}"
 
     message = Mail(
         from_email=from_email,
@@ -226,7 +230,7 @@ def send_email(html_body, subject=None):
 
 def build_sms_body(verdict_lines, snapshot, focus_buys, cap_data, thesis_flags):
     """Build a condensed text message version of the briefing."""
-    date_str = datetime.now().strftime("%b %d")
+    date_str = now_et().strftime("%b %d")
     lines = [f"BRIEFING {date_str}"]
 
     for v in verdict_lines:
@@ -289,7 +293,7 @@ def send_sms(body):
 def run_briefing():
     """Run the full morning briefing pipeline."""
     print(f"\n{'='*60}")
-    print(f"  MORNING BRIEFING — {datetime.now().strftime('%Y-%m-%d %I:%M %p')}")
+    print(f"  MORNING BRIEFING — {now_et().strftime('%Y-%m-%d %I:%M %p')}")
     print(f"{'='*60}\n")
 
     print("1. Fetching prices...")
