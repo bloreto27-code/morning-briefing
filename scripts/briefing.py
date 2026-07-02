@@ -187,7 +187,7 @@ def build_email_html(
     return s
 
 
-SENDGRID_TO = "bloreto27@adrian.edu"
+SENDGRID_TO = "ben.loreto@yahoo.com"
 SENDGRID_FROM = "bloreto27@adrian.edu"
 
 
