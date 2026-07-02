@@ -2,9 +2,10 @@ name: Morning Briefing
 
 on:
   schedule:
-    # 7:30 AM ET = 11:30 UTC (Eastern Daylight Time)
-    # Adjust to 12:30 UTC during Eastern Standard Time (Nov-Mar)
-    - cron: '30 11 * * 1-5'
+    # All times EDT (UTC-4, Apr-Oct). In Nov-Mar shift each by +1 hour.
+    - cron: '30 11 * * 1-5'   # 7:30 AM ET  — Morning Briefing
+    - cron: '0 16 * * 1-5'    # 12:00 PM ET — Midday Update
+    - cron: '0 20 * * 1-5'    # 4:00 PM ET  — Market Close
   workflow_dispatch:
 
 permissions:

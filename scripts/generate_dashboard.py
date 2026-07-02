@@ -18,7 +18,8 @@ def load_json(filename):
 
 def generate_dashboard_data(
     snapshot, progress, cap_data, focus_buys, verdict_lines,
-    news_items, thesis_flags, changes, prices, tfsa_data
+    news_items, thesis_flags, changes, prices, tfsa_data,
+    briefing_type="morning"
 ):
     """Bundle all briefing data into a single JSON for the dashboard."""
     plan = load_json("plan.json")
@@ -166,6 +167,7 @@ def generate_dashboard_data(
     dashboard = {
         "generated_at": now_et().strftime("%Y-%m-%d %I:%M %p ET"),
         "date": now_et().strftime("%Y-%m-%d"),
+        "briefing_type": briefing_type,
         "verdict": verdict_lines,
         "portfolio": {
             "total_cad": snapshot["total_portfolio_cad"],

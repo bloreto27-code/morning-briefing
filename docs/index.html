@@ -22,6 +22,7 @@
 
   /* Layout */
   .page-header { padding:18px 20px 0; }
+  .live-badge { display:inline-block; font-size:.7rem; font-weight:700; padding:2px 7px; border-radius:10px; margin-left:10px; vertical-align:middle; }
   #briefingView,#holdingsView,#watchlistView { padding:20px; }
   h1 { font-size:1.5rem; margin-bottom:4px; }
   h2 { font-size:1.05rem; margin-bottom:12px; color:var(--blue); border-bottom:1px solid var(--border); padding-bottom:6px; }
@@ -239,7 +240,7 @@
 
 <div class="page-header">
   <h1>Morning Briefing</h1>
-  <div class="subtitle" id="timestamp">Loading...</div>
+  <div class="subtitle" id="timestamp">Loading...<span id="liveLabel"></span></div>
 </div>
 
 <div id="briefingView">
@@ -1021,9 +1022,17 @@ function tk(ticker) {
   return `<span class="tk" onclick="openModal('${ticker}')" style="color:#F5A623;font-weight:bold;cursor:pointer;">${ticker}</span>`;
 }
 
+const BRIEFING_BADGE = {
+  morning: { label: 'MORNING', bg: 'rgba(245,166,35,.15)', fg: 'var(--gold)' },
+  midday: { label: 'MIDDAY', bg: 'rgba(210,153,34,.15)', fg: 'var(--yellow)' },
+  close: { label: 'CLOSE', bg: 'rgba(88,166,255,.15)', fg: 'var(--blue)' },
+};
+
 function render(d) {
   _data = d;
-  $('timestamp').textContent = `Updated: ${d.generated_at}  |  USD/CAD: ${d.portfolio.fx_rate}`;
+  const badge = BRIEFING_BADGE[d.briefing_type] || BRIEFING_BADGE.morning;
+  $('timestamp').innerHTML = `Updated: ${d.generated_at}  |  USD/CAD: ${d.portfolio.fx_rate}` +
+    `<span id="liveLabel" class="live-badge" style="background:${badge.bg};color:${badge.fg};">${badge.label}</span>`;
 
   let html = '';
 

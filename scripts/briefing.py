@@ -260,6 +260,74 @@ def build_sms_body(verdict_lines, snapshot, focus_buys, cap_data, thesis_flags):
     return "\n".join(lines)
 
 
+def build_midday_sms_body(snapshot, focus_buys, thesis_flags):
+    """Condensed midday text: portfolio value + any focus buy in zone."""
+    date_str = now_et().strftime("%b %d")
+    p = snapshot
+    sgn = "+" if p["total_gain_cad"] >= 0 else ""
+    lines = [
+        f"MIDDAY {date_str}",
+        f"Portfolio: ${p['total_portfolio_cad']:,.2f} CAD ({sgn}{p['total_gain_pct']:.1f}%)",
+    ]
+
+    buys_in_zone = [fb for fb in focus_buys if fb.get("zone_status") == "BUY" and "error" not in fb]
+    if buys_in_zone:
+        lines.append("")
+        lines.append("IN BUY ZONE NOW:")
+        for fb in buys_in_zone[:3]:
+            ccy = "C" if fb["currency"] == "CAD" else "U"
+            lines.append(f" {fb['ticker']} ${fb['live_price']:.2f}{ccy}")
+    else:
+        lines.append("No focus buys in zone right now.")
+
+    if thesis_flags:
+        lines.append("")
+        lines.append("THESIS ALERT:")
+        for tf in thesis_flags[:2]:
+            lines.append(f" {tf['ticker']}: {tf['title'][:60]}")
+
+    return "\n".join(lines)
+
+
+def build_close_sms_body(snapshot, focus_buys, thesis_flags):
+    """Condensed market-close text: day change + tomorrow's game plan."""
+    date_str = now_et().strftime("%b %d")
+    p = snapshot
+    fx = p["fx_rate"]
+    positions = [pos for pos in p["positions"] if "error" not in pos]
+    day_change_cad = sum(
+        pos.get("day_change", 0) * pos.get("shares", 0) * (1 if pos["currency"] == "CAD" else fx)
+        for pos in positions
+    )
+    day_sgn = "+" if day_change_cad >= 0 else ""
+    sgn = "+" if p["total_gain_cad"] >= 0 else ""
+    lines = [
+        f"CLOSE {date_str}",
+        f"Portfolio: ${p['total_portfolio_cad']:,.2f} CAD",
+        f"Today: {day_sgn}${abs(day_change_cad):,.2f}  |  Total: {sgn}{p['total_gain_pct']:.1f}%",
+    ]
+
+    in_zone = [fb for fb in focus_buys if fb.get("zone_status") == "BUY" and "error" not in fb]
+    near_zone = [fb for fb in focus_buys if fb.get("zone_status") in ("WATCH", "WAIT") and "error" not in fb]
+    lines.append("")
+    if in_zone:
+        fb0 = in_zone[0]
+        lines.append(f"Plan: {fb0['ticker']} closed in buy zone at ${fb0['live_price']:.2f}.")
+    elif near_zone:
+        fb0 = near_zone[0]
+        lines.append(f"Plan: {fb0['ticker']} approaching zone, alert at {fb0.get('starter', '—')}.")
+    else:
+        lines.append("Plan: No focus buys in zone. Fund XEQT.TO next deposit.")
+
+    if thesis_flags:
+        lines.append("")
+        lines.append("THESIS FLAGS TODAY:")
+        for tf in thesis_flags[:2]:
+            lines.append(f" {tf['ticker']}: {tf['title'][:60]}")
+
+    return "\n".join(lines)
+
+
 def send_sms(body):
     """Send the briefing SMS via Twilio."""
     account_sid = os.environ.get("TWILIO_ACCOUNT_SID")
@@ -290,10 +358,213 @@ def send_sms(body):
         return False
 
 
+def get_briefing_type():
+    """Detect morning / midday / close from current Toronto hour, or BRIEFING_TYPE env var."""
+    t = os.environ.get("BRIEFING_TYPE", "").lower().strip()
+    if t in ("morning", "midday", "close"):
+        return t
+    h = now_et().hour
+    if h <= 10:
+        return "morning"
+    elif h <= 14:
+        return "midday"
+    else:
+        return "close"
+
+
+def build_midday_email_html(snapshot, focus_buys, thesis_flags):
+    date_str = now_et().strftime("%A, %B %d, %Y")
+    time_str = now_et().strftime("%I:%M %p ET")
+    fx = snapshot["fx_rate"]
+    p = snapshot
+    gain_color = "#3fb950" if p["total_gain_cad"] >= 0 else "#f85149"
+    sgn = "+" if p["total_gain_cad"] >= 0 else ""
+
+    positions = [pos for pos in p["positions"] if "error" not in pos]
+    by_day = sorted(positions, key=lambda x: x.get("day_pct", 0), reverse=True)
+    buys_in_zone = [fb for fb in focus_buys if fb.get("zone_status") == "BUY" and "error" not in fb]
+
+    s = f"""<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;
+max-width:700px;margin:0 auto;background:#0d1117;color:#e6edf3;padding:20px;border-radius:8px;">
+<h1 style="color:#d29922;font-size:1.3rem;margin-bottom:2px;">Midday Update &#9201;</h1>
+<div style="color:#8b949e;font-size:0.8rem;margin-bottom:16px;">{date_str} &nbsp;|&nbsp; {time_str} &nbsp;|&nbsp; USD/CAD: {fx}</div>"""
+
+    s += f"""<table style="width:100%;border-collapse:collapse;margin-bottom:14px;font-size:0.85rem;"><tr>
+<td style="text-align:center;padding:10px;background:#161b22;border:1px solid #30363d;border-radius:6px;">
+  <div style="font-size:1.3rem;font-weight:700;">${p["total_portfolio_cad"]:,.2f}</div>
+  <div style="color:#8b949e;font-size:0.7rem;text-transform:uppercase;">Portfolio CAD</div></td>
+<td style="text-align:center;padding:10px;background:#161b22;border:1px solid #30363d;border-radius:6px;">
+  <div style="font-size:1.3rem;font-weight:700;color:{gain_color};">{sgn}${abs(p["total_gain_cad"]):,.2f}</div>
+  <div style="color:#8b949e;font-size:0.7rem;text-transform:uppercase;">Unrealized P&L ({sgn}{p["total_gain_pct"]:.1f}%)</div></td>
+</tr></table>"""
+
+    # Positions sorted by day move
+    s += """<div style="background:#161b22;border:1px solid #30363d;border-radius:8px;padding:14px;margin-bottom:14px;">
+<div style="color:#58a6ff;font-weight:600;margin-bottom:8px;font-size:0.9rem;">YOUR HOLDINGS RIGHT NOW</div>
+<table style="width:100%;border-collapse:collapse;font-size:0.78rem;">
+<tr style="color:#8b949e;"><th style="text-align:left;padding:4px;">Ticker</th>
+<th style="text-align:right;padding:4px;">Price</th><th style="text-align:right;padding:4px;">Day %</th>
+<th style="text-align:right;padding:4px;">Value CAD</th></tr>"""
+    for pos in by_day:
+        ccy = "C" if pos["currency"] == "CAD" else "U"
+        dc = "#3fb950" if pos["day_pct"] >= 0 else "#f85149"
+        dsgn = "+" if pos["day_pct"] >= 0 else ""
+        s += f'<tr style="border-bottom:1px solid #30363d;"><td style="padding:4px;font-weight:700;color:#F5A623;">{pos["ticker"]}</td><td style="text-align:right;padding:4px;">{pos["live_price"]:.2f}{ccy}</td><td style="text-align:right;padding:4px;color:{dc};">{dsgn}{pos["day_pct"]:.1f}%</td><td style="text-align:right;padding:4px;">${pos["value_cad"]:,.2f}</td></tr>'
+    s += "</table></div>"
+
+    # Focus buys
+    border = "#3fb950" if buys_in_zone else "#30363d"
+    hdr_color = "#3fb950" if buys_in_zone else "#58a6ff"
+    hdr_txt = "&#9989; FOCUS BUY IN ZONE NOW" if buys_in_zone else "FOCUS BUYS — MIDDAY PRICES"
+    s += f'<div style="background:#161b22;border:1px solid {border};border-radius:8px;padding:14px;margin-bottom:14px;">'
+    s += f'<div style="color:{hdr_color};font-weight:600;margin-bottom:8px;font-size:0.9rem;">{hdr_txt}</div>'
+    for fb in focus_buys[:4]:
+        if "error" in fb:
+            continue
+        ccy = "C" if fb["currency"] == "CAD" else "U"
+        zone_color = "#3fb950" if fb["zone_status"] == "BUY" else "#d29922" if fb["zone_status"] in ("WATCH","WAIT") else "#8b949e"
+        dsgn = "+" if fb["day_pct"] >= 0 else ""
+        s += f'<div style="font-size:0.83rem;margin-bottom:5px;"><strong style="color:#F5A623;">{fb["ticker"]}</strong> &nbsp; ${fb["live_price"]:.2f}{ccy} &nbsp; <span style="color:{zone_color};">{fb["zone_status"]}</span> &nbsp; <span style="color:#8b949e;">Score {fb["score"] or "—"} &nbsp; {dsgn}{fb["day_pct"]:.1f}% today</span></div>'
+    s += "</div>"
+
+    if thesis_flags:
+        s += '<div style="background:#161b22;border:1px solid #f85149;border-radius:8px;padding:14px;margin-bottom:14px;">'
+        s += '<div style="color:#f85149;font-weight:600;margin-bottom:8px;font-size:0.9rem;">&#9888; THESIS WATCH</div>'
+        for tf in thesis_flags[:3]:
+            s += f'<div style="font-size:0.82rem;margin-bottom:4px;"><strong style="color:#F5A623;">{tf["ticker"]}</strong>: {tf["title"][:80]}</div>'
+        s += "</div>"
+
+    s += '<div style="text-align:center;color:#8b949e;font-size:0.7rem;margin-top:10px;">Market Close update at 4:00 PM ET &bull; Dashboard: bloreto27-code.github.io/morning-briefing</div></div>'
+    return s
+
+
+def build_close_email_html(snapshot, focus_buys, thesis_flags, news_items):
+    date_str = now_et().strftime("%A, %B %d, %Y")
+    fx = snapshot["fx_rate"]
+    p = snapshot
+    gain_color = "#3fb950" if p["total_gain_cad"] >= 0 else "#f85149"
+    sgn = "+" if p["total_gain_cad"] >= 0 else ""
+
+    positions = [pos for pos in p["positions"] if "error" not in pos]
+    by_day = sorted(positions, key=lambda x: x.get("day_pct", 0), reverse=True)
+    gainers = [x for x in by_day if x.get("day_pct", 0) > 0]
+    losers = [x for x in reversed(by_day) if x.get("day_pct", 0) < 0]
+
+    day_change_cad = sum(
+        pos.get("day_change", 0) * pos.get("shares", 0) * (1 if pos["currency"] == "CAD" else fx)
+        for pos in positions
+    )
+    day_color = "#3fb950" if day_change_cad >= 0 else "#f85149"
+    day_sgn = "+" if day_change_cad >= 0 else ""
+
+    s = f"""<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;
+max-width:700px;margin:0 auto;background:#0d1117;color:#e6edf3;padding:20px;border-radius:8px;">
+<h1 style="color:#58a6ff;font-size:1.3rem;margin-bottom:2px;">Market Close &#128200;</h1>
+<div style="color:#8b949e;font-size:0.8rem;margin-bottom:16px;">{date_str} &nbsp;|&nbsp; Markets closed 4:00 PM ET &nbsp;|&nbsp; USD/CAD: {fx}</div>"""
+
+    s += f"""<table style="width:100%;border-collapse:collapse;margin-bottom:14px;font-size:0.85rem;"><tr>
+<td style="text-align:center;padding:10px;background:#161b22;border:1px solid #30363d;border-radius:6px;">
+  <div style="font-size:1.3rem;font-weight:700;">${p["total_portfolio_cad"]:,.2f}</div>
+  <div style="color:#8b949e;font-size:0.7rem;text-transform:uppercase;">Closing Value CAD</div></td>
+<td style="text-align:center;padding:10px;background:#161b22;border:1px solid #30363d;border-radius:6px;">
+  <div style="font-size:1.3rem;font-weight:700;color:{day_color};">{day_sgn}${abs(day_change_cad):,.2f}</div>
+  <div style="color:#8b949e;font-size:0.7rem;text-transform:uppercase;">Today's Change CAD</div></td>
+<td style="text-align:center;padding:10px;background:#161b22;border:1px solid #30363d;border-radius:6px;">
+  <div style="font-size:1.3rem;font-weight:700;color:{gain_color};">{sgn}${abs(p["total_gain_cad"]):,.2f} ({sgn}{p["total_gain_pct"]:.1f}%)</div>
+  <div style="color:#8b949e;font-size:0.7rem;text-transform:uppercase;">Total Unrealized P&L</div></td>
+</tr></table>"""
+
+    # Closing prices
+    s += """<div style="background:#161b22;border:1px solid #30363d;border-radius:8px;padding:14px;margin-bottom:14px;">
+<div style="color:#58a6ff;font-weight:600;margin-bottom:8px;font-size:0.9rem;">CLOSING PRICES</div>
+<table style="width:100%;border-collapse:collapse;font-size:0.78rem;">
+<tr style="color:#8b949e;"><th style="text-align:left;padding:4px;">Ticker</th>
+<th style="text-align:right;padding:4px;">Close</th><th style="text-align:right;padding:4px;">Day</th>
+<th style="text-align:right;padding:4px;">Value CAD</th><th style="text-align:right;padding:4px;">Total Gain</th></tr>"""
+    for pos in sorted(positions, key=lambda x: x.get("value_cad", 0), reverse=True):
+        ccy = "C" if pos["currency"] == "CAD" else "U"
+        dc = "#3fb950" if pos["day_pct"] >= 0 else "#f85149"
+        gc = "#3fb950" if pos["gain_cad"] >= 0 else "#f85149"
+        dsgn = "+" if pos["day_pct"] >= 0 else ""
+        gsgn = "+" if pos["gain_pct"] >= 0 else ""
+        s += f'<tr style="border-bottom:1px solid #30363d;"><td style="padding:4px;font-weight:700;color:#F5A623;">{pos["ticker"]}</td><td style="text-align:right;padding:4px;">{pos["live_price"]:.2f}{ccy}</td><td style="text-align:right;padding:4px;color:{dc};">{dsgn}{pos["day_pct"]:.1f}%</td><td style="text-align:right;padding:4px;">${pos["value_cad"]:,.2f}</td><td style="text-align:right;padding:4px;color:{gc};">{gsgn}{pos["gain_pct"]:.1f}%</td></tr>'
+    s += "</table></div>"
+
+    # Day movers
+    if gainers or losers:
+        s += '<div style="background:#161b22;border:1px solid #30363d;border-radius:8px;padding:14px;margin-bottom:14px;">'
+        s += '<div style="color:#58a6ff;font-weight:600;margin-bottom:8px;font-size:0.9rem;">DAY MOVERS IN YOUR HOLDINGS</div>'
+        if gainers:
+            s += '<div style="color:#3fb950;font-size:0.75rem;font-weight:700;margin-bottom:4px;text-transform:uppercase;">Gainers</div>'
+            for pos in gainers:
+                s += f'<div style="font-size:0.82rem;margin-bottom:3px;"><strong style="color:#F5A623;">{pos["ticker"]}</strong> <span style="color:#3fb950;">+{pos["day_pct"]:.1f}%</span> &nbsp; ${pos["live_price"]:.2f}</div>'
+        if losers:
+            s += '<div style="color:#f85149;font-size:0.75rem;font-weight:700;margin:8px 0 4px;text-transform:uppercase;">Losers</div>'
+            for pos in losers:
+                s += f'<div style="font-size:0.82rem;margin-bottom:3px;"><strong style="color:#F5A623;">{pos["ticker"]}</strong> <span style="color:#f85149;">{pos["day_pct"]:.1f}%</span> &nbsp; ${pos["live_price"]:.2f}</div>'
+        s += "</div>"
+
+    # Focus buys at close
+    s += """<div style="background:#161b22;border:1px solid #30363d;border-radius:8px;padding:14px;margin-bottom:14px;">
+<div style="color:#58a6ff;font-weight:600;margin-bottom:8px;font-size:0.9rem;">FOCUS BUYS AT CLOSE</div>
+<table style="width:100%;border-collapse:collapse;font-size:0.78rem;">
+<tr style="color:#8b949e;"><th style="text-align:left;padding:4px;">#</th><th style="text-align:left;padding:4px;">Ticker</th>
+<th style="text-align:right;padding:4px;">Close</th><th style="text-align:right;padding:4px;">Day</th>
+<th style="text-align:left;padding:4px;">Zone</th><th style="text-align:right;padding:4px;">Score</th></tr>"""
+    for fb in focus_buys:
+        if "error" in fb:
+            continue
+        ccy = "C" if fb["currency"] == "CAD" else "U"
+        dc = "#3fb950" if fb["day_pct"] >= 0 else "#f85149"
+        dsgn = "+" if fb["day_pct"] >= 0 else ""
+        zc = "#3fb950" if fb["zone_status"] == "BUY" else "#d29922" if fb["zone_status"] in ("WATCH","WAIT") else "#8b949e"
+        s += f'<tr style="border-bottom:1px solid #30363d;"><td style="padding:4px;">{fb["rank"]}</td><td style="padding:4px;font-weight:700;color:#F5A623;">{fb["ticker"]}</td><td style="text-align:right;padding:4px;">{fb["live_price"]:.2f}{ccy}</td><td style="text-align:right;padding:4px;color:{dc};">{dsgn}{fb["day_pct"]:.1f}%</td><td style="padding:4px;color:{zc};">{fb["zone_status"]}</td><td style="text-align:right;padding:4px;">{fb["score"] or "—"}</td></tr>'
+    s += "</table></div>"
+
+    if thesis_flags:
+        s += '<div style="background:#161b22;border:1px solid #f85149;border-radius:8px;padding:14px;margin-bottom:14px;">'
+        s += '<div style="color:#f85149;font-weight:600;margin-bottom:8px;font-size:0.9rem;">&#9888; THESIS FLAGS TODAY</div>'
+        for tf in thesis_flags:
+            s += f'<div style="font-size:0.82rem;margin-bottom:6px;"><strong style="color:#F5A623;">{tf["ticker"]}</strong>: &ldquo;{tf["title"][:80]}&rdquo;<br><span style="color:#8b949e;">Matched: {tf["matched_keyword"]}</span></div>'
+        s += "</div>"
+
+    # Tomorrow's game plan
+    in_zone = [fb for fb in focus_buys if fb.get("zone_status") == "BUY" and "error" not in fb]
+    near_zone = [fb for fb in focus_buys if fb.get("zone_status") in ("WATCH","WAIT") and "error" not in fb]
+    s += """<div style="background:#161b22;border:1px solid #30363d;border-radius:8px;padding:14px;margin-bottom:14px;">
+<div style="color:#58a6ff;font-weight:600;margin-bottom:8px;font-size:0.9rem;">TOMORROW'S GAME PLAN</div>"""
+    if in_zone:
+        fb0 = in_zone[0]
+        s += f'<div style="font-size:0.85rem;margin-bottom:6px;color:#3fb950;">&#9989; <strong>{fb0["ticker"]}</strong> closed in buy zone at ${fb0["live_price"]:.2f}. Next deposit: XEQT.TO first, then {fb0["ticker"]}.</div>'
+    elif near_zone:
+        fb0 = near_zone[0]
+        s += f'<div style="font-size:0.85rem;margin-bottom:6px;color:#d29922;">&#9201; <strong>{fb0["ticker"]}</strong> is approaching buy zone. Set a price alert at {fb0.get("starter","—")}.</div>'
+    else:
+        s += '<div style="font-size:0.85rem;margin-bottom:6px;color:#8b949e;">No focus buys in zone. Fund XEQT.TO on next deposit and hold cash otherwise.</div>'
+    s += '<div style="font-size:0.8rem;color:#8b949e;margin-top:4px;">Full morning briefing tomorrow at 7:30 AM ET.</div></div>'
+
+    # Top news
+    if news_items:
+        s += """<div style="background:#161b22;border:1px solid #30363d;border-radius:8px;padding:14px;margin-bottom:14px;">
+<div style="color:#58a6ff;font-weight:600;margin-bottom:8px;font-size:0.9rem;">TODAY'S KEY NEWS</div>"""
+        for n in news_items[:8]:
+            link = n.get("link", "")
+            title = n["title"][:80]
+            title_html = f'<a href="{link}" style="color:#e6edf3;text-decoration:none;border-bottom:1px dotted #8b949e;">{title}</a>' if link else title
+            s += f'<div style="font-size:0.75rem;padding:3px 0;border-bottom:1px solid #30363d;"><span style="color:#F5A623;font-weight:700;">{n["ticker"]}</span> {title_html} <span style="color:#8b949e;font-size:0.68rem;">&mdash; {n["published"]}</span></div>'
+        s += "</div>"
+
+    s += '<div style="text-align:center;color:#8b949e;font-size:0.7rem;margin-top:10px;">Generated by Morning Briefing System &bull; Prices may lag. Broker app is final word.</div></div>'
+    return s
+
+
 def run_briefing():
-    """Run the full morning briefing pipeline."""
+    """Run the full briefing pipeline — morning, midday, or market close."""
+    briefing_type = get_briefing_type()
+    ts = now_et().strftime("%Y-%m-%d %I:%M %p ET")
+    labels = {"morning": "MORNING BRIEFING", "midday": "MIDDAY UPDATE", "close": "MARKET CLOSE"}
     print(f"\n{'='*60}")
-    print(f"  MORNING BRIEFING — {now_et().strftime('%Y-%m-%d %I:%M %p')}")
+    print(f"  {labels.get(briefing_type, 'BRIEFING')} — {ts}")
     print(f"{'='*60}\n")
 
     print("1. Fetching prices...")
@@ -337,20 +608,35 @@ def run_briefing():
     tfsa_data = load_json("contributions.json")
     generate_dashboard_data(
         snapshot, progress, cap_data, focus_buys, verdict_lines,
-        news_items, thesis_flags, changes, prices, tfsa_data
+        news_items, thesis_flags, changes, prices, tfsa_data,
+        briefing_type=briefing_type
     )
 
-    print("9. Building email...")
-    email_html = build_email_html(
-        verdict_lines, progress, snapshot, cap_data, focus_buys,
-        news_items, thesis_flags, changes, prices, tfsa_data
-    )
+    print(f"9. Building {briefing_type} email...")
+    date_str = now_et().strftime("%B %d, %Y")
+    if briefing_type == "morning":
+        email_html = build_email_html(
+            verdict_lines, progress, snapshot, cap_data, focus_buys,
+            news_items, thesis_flags, changes, prices, tfsa_data
+        )
+        subject = f"Morning Briefing — {date_str}"
+    elif briefing_type == "midday":
+        email_html = build_midday_email_html(snapshot, focus_buys, thesis_flags)
+        subject = f"Midday Update — {date_str} | ${snapshot['total_portfolio_cad']:,.0f} CAD"
+    else:
+        email_html = build_close_email_html(snapshot, focus_buys, thesis_flags, news_items)
+        subject = f"Market Close — {date_str} | ${snapshot['total_portfolio_cad']:,.0f} CAD"
 
     print("10. Sending email...")
-    send_email(email_html)
+    send_email(email_html, subject)
 
     print("11. Building & sending SMS...")
-    sms_body = build_sms_body(verdict_lines, snapshot, focus_buys, cap_data, thesis_flags)
+    if briefing_type == "morning":
+        sms_body = build_sms_body(verdict_lines, snapshot, focus_buys, cap_data, thesis_flags)
+    elif briefing_type == "midday":
+        sms_body = build_midday_sms_body(snapshot, focus_buys, thesis_flags)
+    else:
+        sms_body = build_close_sms_body(snapshot, focus_buys, thesis_flags)
     send_sms(sms_body)
 
     print(f"\n{'='*60}")
@@ -360,6 +646,7 @@ def run_briefing():
     print(f"{'='*60}\n")
 
     return {
+        "briefing_type": briefing_type,
         "snapshot": snapshot,
         "progress": progress,
         "cap_data": cap_data,
