@@ -1030,9 +1030,9 @@ const BRIEFING_BADGE = {
 
 function render(d) {
   _data = d;
-  const badge = BRIEFING_BADGE[d.briefing_type] || BRIEFING_BADGE.morning;
+  const briefingBadge = BRIEFING_BADGE[d.briefing_type] || BRIEFING_BADGE.morning;
   $('timestamp').innerHTML = `Updated: ${d.generated_at}  |  USD/CAD: ${d.portfolio.fx_rate}` +
-    `<span id="liveLabel" class="live-badge" style="background:${badge.bg};color:${badge.fg};">${badge.label}</span>`;
+    `<span id="liveLabel" class="live-badge" style="background:${briefingBadge.bg};color:${briefingBadge.fg};">${briefingBadge.label}</span>`;
 
   let html = '';
 
