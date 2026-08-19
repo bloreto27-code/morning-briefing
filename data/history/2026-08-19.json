@@ -1,66 +1,66 @@
 {
   "date": "2026-08-19",
-  "timestamp": "2026-08-19T16:35:30.856564",
-  "fx_rate": 1.381,
-  "total_portfolio_cad": 1249.26,
-  "total_gain_cad": 45.9,
-  "total_gain_pct": 3.82,
+  "timestamp": "2026-08-19T20:19:44.422966",
+  "fx_rate": 1.3813,
+  "total_portfolio_cad": 1250.27,
+  "total_gain_cad": 46.72,
+  "total_gain_pct": 3.89,
   "cash_cad": 1.3,
   "positions": {
     "CEG": {
-      "price": 271.56,
-      "value_cad": 505.94,
-      "weight_pct": 40.5,
-      "gain_pct": 9.38,
+      "price": 274.17,
+      "value_cad": 510.92,
+      "weight_pct": 40.86,
+      "gain_pct": 10.43,
       "currency": "USD"
     },
     "ETN": {
-      "price": 423.94,
-      "value_cad": 100.34,
-      "weight_pct": 8.03,
-      "gain_pct": 11.84,
+      "price": 424.67,
+      "value_cad": 100.54,
+      "weight_pct": 8.04,
+      "gain_pct": 12.04,
       "currency": "USD"
     },
     "GEV": {
-      "price": 981.51,
-      "value_cad": 7.72,
+      "price": 987.46,
+      "value_cad": 7.78,
       "weight_pct": 0.62,
-      "gain_pct": 13.16,
+      "gain_pct": 13.97,
       "currency": "USD"
     },
     "OSS": {
-      "price": 12.36,
-      "value_cad": 102.41,
-      "weight_pct": 8.2,
-      "gain_pct": -21.67,
+      "price": 12.11,
+      "value_cad": 100.37,
+      "weight_pct": 8.03,
+      "gain_pct": -23.26,
       "currency": "USD"
     },
     "PWR": {
-      "price": 674.17,
-      "value_cad": 71.88,
-      "weight_pct": 5.75,
-      "gain_pct": 4.2,
+      "price": 677.41,
+      "value_cad": 72.24,
+      "weight_pct": 5.78,
+      "gain_pct": 4.7,
       "currency": "USD"
     },
     "SOFI": {
-      "price": 18.69,
-      "value_cad": 124.9,
-      "weight_pct": 10.0,
-      "gain_pct": 8.53,
+      "price": 18.42,
+      "value_cad": 123.13,
+      "weight_pct": 9.85,
+      "gain_pct": 6.97,
       "currency": "USD"
     },
     "VFV.TO": {
-      "price": 189.41,
-      "value_cad": 204.58,
-      "weight_pct": 16.38,
-      "gain_pct": 2.95,
+      "price": 188.93,
+      "value_cad": 204.06,
+      "weight_pct": 16.32,
+      "gain_pct": 2.69,
       "currency": "CAD"
     },
     "XEQT.TO": {
-      "price": 45.69,
-      "value_cad": 130.19,
-      "weight_pct": 10.42,
-      "gain_pct": 0.59,
+      "price": 45.6,
+      "value_cad": 129.93,
+      "weight_pct": 10.39,
+      "gain_pct": 0.39,
       "currency": "CAD"
     }
   },
@@ -76,8 +76,8 @@
     "VFV.TO": "NO CAP",
     "XEQT.TO": "NO CAP",
     "SOFI": "NEAR CAP",
-    "OSS": "BREACH",
     "ETN": "OK",
+    "OSS": "BREACH",
     "PWR": "OK",
     "GEV": "OK"
   },
