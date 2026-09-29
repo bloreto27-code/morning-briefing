@@ -1,22 +1,22 @@
 {
   "date": "2026-09-29",
-  "timestamp": "2026-09-29T20:33:27.908034",
-  "fx_rate": 1.4189,
-  "total_portfolio_cad": 1213.51,
+  "timestamp": "2026-09-29T23:21:00.076219",
+  "fx_rate": 1.4191,
+  "total_portfolio_cad": 1213.63,
   "total_gain_cad": -13.84,
   "total_gain_pct": -1.13,
   "cash_cad": 1.3,
   "positions": {
     "CEG": {
       "price": 264.58,
-      "value_cad": 506.46,
+      "value_cad": 506.53,
       "weight_pct": 41.74,
       "gain_pct": 6.57,
       "currency": "USD"
     },
     "ETN": {
       "price": 433.27,
-      "value_cad": 105.37,
+      "value_cad": 105.38,
       "weight_pct": 8.68,
       "gain_pct": 14.3,
       "currency": "USD"
@@ -30,21 +30,21 @@
     },
     "OSS": {
       "price": 8.65,
-      "value_cad": 73.64,
+      "value_cad": 73.65,
       "weight_pct": 6.07,
       "gain_pct": -45.18,
       "currency": "USD"
     },
     "PWR": {
       "price": 651.79,
-      "value_cad": 71.4,
+      "value_cad": 71.41,
       "weight_pct": 5.88,
       "gain_pct": 0.74,
       "currency": "USD"
     },
     "SOFI": {
       "price": 15.91,
-      "value_cad": 109.24,
+      "value_cad": 109.26,
       "weight_pct": 9.0,
       "gain_pct": -7.61,
       "currency": "USD"
