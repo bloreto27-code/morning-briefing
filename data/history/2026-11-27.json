@@ -1,16 +1,16 @@
 {
   "date": "2026-11-27",
-  "timestamp": "2026-11-27T20:08:41.991849",
+  "timestamp": "2026-11-27T23:57:21.208772",
   "fx_rate": 1.4248,
-  "total_portfolio_cad": 1064.06,
-  "total_gain_cad": -167.03,
-  "total_gain_pct": -13.58,
+  "total_portfolio_cad": 1064.42,
+  "total_gain_cad": -166.67,
+  "total_gain_pct": -13.55,
   "cash_cad": 1.3,
   "positions": {
     "CEG": {
       "price": 238.1,
       "value_cad": 457.67,
-      "weight_pct": 43.01,
+      "weight_pct": 43.0,
       "gain_pct": -4.1,
       "currency": "USD"
     },
@@ -50,17 +50,17 @@
       "currency": "USD"
     },
     "VFV.TO": {
-      "price": 184.89,
-      "value_cad": 199.7,
-      "weight_pct": 18.77,
-      "gain_pct": 0.49,
+      "price": 185.38,
+      "value_cad": 200.23,
+      "weight_pct": 18.81,
+      "gain_pct": 0.76,
       "currency": "CAD"
     },
     "XEQT.TO": {
-      "price": 44.04,
-      "value_cad": 125.49,
-      "weight_pct": 11.79,
-      "gain_pct": -3.04,
+      "price": 43.98,
+      "value_cad": 125.32,
+      "weight_pct": 11.77,
+      "gain_pct": -3.17,
       "currency": "CAD"
     }
   },
